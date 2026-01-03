@@ -1,0 +1,285 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Timesheet Management API",
+    "version": "1.0.0",
+    "description": "Timesheet module APIs with JWT-based authentication"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/timesheets": {
+      "post": {
+        "summary": "Create timesheet",
+        "description": "Employee creates a new timesheet entry",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTimesheetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Timesheet created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimesheetResponse"
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "get": {
+        "summary": "Get all timesheets",
+        "description": "Fetch all active timesheets",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of timesheets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimesheetResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/timesheets/{id}": {
+      "get": {
+        "summary": "Get timesheet by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timesheet details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimesheetResponse"
+                }
+              }
+            }
+          },
+          "404": { "description": "Timesheet not found" }
+        }
+      },
+      "put": {
+        "summary": "Update timesheet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTimesheetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Timesheet updated" },
+          "400": { "description": "Invalid update" },
+          "404": { "description": "Timesheet not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete timesheet (soft delete)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Timesheet deleted" },
+          "404": { "description": "Timesheet not found" }
+        }
+      }
+    },
+
+    "/timesheets/{id}/approve": {
+      "post": {
+        "summary": "Approve timesheet",
+        "description": "Manager approves a submitted timesheet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Timesheet approved" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Timesheet not found" }
+        }
+      }
+    },
+
+    "/timesheets/report": {
+      "get": {
+        "summary": "Get timesheet report",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timesheet report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimesheetReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CreateTimesheetRequest": {
+        "type": "object",
+        "required": ["projectId", "workDate", "hoursWorked"],
+        "properties": {
+          "projectId": {
+            "type": "integer",
+            "example": 101
+          },
+          "workDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "hoursWorked": {
+            "type": "number",
+            "example": 8
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+
+      "UpdateTimesheetRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "integer"
+          },
+          "hoursWorked": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+
+      "TimesheetResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "employeeId": { "type": "integer" },
+          "projectId": { "type": "integer" },
+          "workDate": { "type": "string", "format": "date" },
+          "hoursWorked": { "type": "number" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "approvedBy": { "type": "integer" },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+
+      "TimesheetReportResponse": {
+        "type": "object",
+        "properties": {
+          "employeeId": { "type": "integer" },
+          "totalHours": { "type": "number" },
+          "from": { "type": "string", "format": "date" },
+          "to": { "type": "string", "format": "date" }
+        }
+      }
+    }
+  }
+}
